@@ -32,7 +32,7 @@ public class NoteController {
         return noteService.createNoteForUser(username, content);
     }
     
-    @GetMapping()
+    @GetMapping
     public List<Note> getUserNotes(@AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
         return noteService.getNotesForUser(username);
