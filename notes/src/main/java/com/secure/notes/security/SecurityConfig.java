@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.secure.notes.model.AppRole;
 import com.secure.notes.model.Role;
@@ -32,9 +33,11 @@ public class SecurityConfig {
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(
                 requests -> requests
-                // .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
                 .csrf(AbstractHttpConfigurer::disable)
+                .addFilterBefore(new CustomLoggingFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new RequestValidationFilter(), CustomLoggingFilter.class)
                 // .formLogin(withDefaults())
                 .httpBasic(withDefaults())
                 .build();
