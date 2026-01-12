@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 // import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
@@ -22,11 +25,20 @@ import com.secure.notes.model.Role;
 import com.secure.notes.model.User;
 import com.secure.notes.repository.RoleRepository;
 import com.secure.notes.repository.UserRepository;
+import com.secure.notes.security.jwt.AuthEntryPointJwt;
+import com.secure.notes.security.jwt.AuthTokenFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final AuthEntryPointJwt unauthorizedHandler;
+
+    private final AuthTokenFilter authenticationJwtTokenFilter;
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -36,13 +48,21 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/csrf-token").permitAll()
+                        .requestMatchers("/api/auth/public/**").permitAll()
                         .anyRequest().authenticated())
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .addFilterBefore(authenticationJwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 // .addFilterBefore(new CustomLoggingFilter(),
                 // UsernamePasswordAuthenticationFilter.class)
                 // .addFilterAfter(new RequestValidationFilter(), CustomLoggingFilter.class)
                 .formLogin(withDefaults())
                 .httpBasic(withDefaults())
                 .build();
+    }
+
+    @Bean
+    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
