@@ -12,7 +12,6 @@ import com.secure.notes.model.AuditLog;
 import com.secure.notes.service.AuditLogService;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,12 +25,11 @@ public class AuditLogController {
     public List<AuditLog> getAllAuditLogs() {
         return auditLogService.getAllAuditLogs();
     }
-    
-    @PostMapping("/note/{id}")
+
+    @GetMapping("/note/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public List<AuditLog> getNoteAuditLogs(@PathVariable Long id) {
         return auditLogService.getAuditLogsByNoteId(id);
     }
-    
 
 }
