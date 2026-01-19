@@ -1,6 +1,7 @@
 package com.secure.notes.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.secure.notes.dto.UserDTO;
 import com.secure.notes.model.Role;
@@ -31,5 +32,9 @@ public interface UserService {
     void generatePasswordResetToken(String email);
 
     void resetPassword(String token, String newPassword);
+
+    Optional<User> findByEmail(String email);
+
+    User registerUser(User user);
 
 }

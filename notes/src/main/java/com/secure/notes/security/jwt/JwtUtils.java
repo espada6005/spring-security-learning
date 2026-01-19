@@ -2,6 +2,7 @@ package com.secure.notes.security.jwt;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 
@@ -29,7 +30,7 @@ public class JwtUtils {
     private int jwtExpirationMs;
 
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
-    
+
     public String getJwtFromHeader(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -40,8 +41,12 @@ public class JwtUtils {
 
     public String generateTokenFromUsername(UserDetails userDetails) {
         String username = userDetails.getUsername();
+        String roles = userDetails.getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .collect(Collectors.joining(","));
         return Jwts.builder()
                 .subject(username)
+                .claim("roles", roles)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key())
@@ -50,7 +55,7 @@ public class JwtUtils {
 
     public String getUsernameFromJwtToken(String token) {
         return Jwts.parser()
-                .verifyWith((SecretKey)key())
+                .verifyWith((SecretKey) key())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
@@ -61,17 +66,17 @@ public class JwtUtils {
         try {
             System.out.println("Validate");
             Jwts.parser()
-                .verifyWith((SecretKey)key())
-                .build()
-                .parseSignedClaims(authToken);
+                    .verifyWith((SecretKey) key())
+                    .build()
+                    .parseSignedClaims(authToken);
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
-        } catch(ExpiredJwtException e) {
+        } catch (ExpiredJwtException e) {
             logger.error("JWT token is expired: {}", e.getMessage());
-        } catch(UnsupportedJwtException e) {
+        } catch (UnsupportedJwtException e) {
             logger.error("JWT token is unsupported: {}", e.getMessage());
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             logger.error("JWT claims string is empty: {}", e.getMessage());
         }
         return false;
